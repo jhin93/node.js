@@ -15,6 +15,7 @@ function templateHTML(title, list, body){
           <body>
             <h1><a href="/">WEB</a></h1>
             ${list}
+            <a href="/create">create</a>
             ${body}
           </body>
           </html>      
@@ -39,7 +40,6 @@ var app = http.createServer(function(request,response){
     var _url = request.url;
     var queryData = url.parse(_url, true).query;
     var pathname = url.parse(_url, true).pathname;
-
     // 접속한 곳이 루트(/)라면, 정상 렌더링.
     if(pathname === '/'){
       // 하지만 pathname만으로는 메인페이지와 사이드페이지들을 구분할 수 없기에 .id로 쿼리스트링이 undefined일 때 즉, 메인페이지를 조건으로 새롭게 렌더링.
@@ -77,10 +77,38 @@ var app = http.createServer(function(request,response){
           });
         });
       }
+      // 글 작성 페이지
+    } else if(pathname === '/create'){
+      fs.readdir('./data', function(error, filelist){
+        // 파일리스트 가져오고 렌더링파트(var template) 삽입.
+        var title = 'WEB - create';
+
+        // templateList 함수. 가져온 filelist 배열을 인자로 사용. 파일리스트 가져오기.
+        var list = templateList(filelist);
+
+        // templateHTML 이란 함수를 사용해서 본문을 렌더링.
+        var template = templateHTML(title, list, `
+          <!-- 아래 주소의 서버로 인풋값들을 전송함. 그러기 위해 name 속성이 필요. -->
+          <form action="http://localhost:3000/process_create" method="post">
+              <p><input type="text" name="title" placeholder="title"></p>
+              <p>
+                  <!-- 여러줄 입력하는 태그 - textarea -->
+                  <textarea name="description" placeholder="description" id="" cols="30" rows="10"></textarea>
+              </p>
+              <p>
+                  <input type="submit">
+              </p>
+          </form>
+        `);
+        response.writeHead(200);
+        response.end(template);
+      });
     } else {
       response.writeHead(404);
       response.end('Not found');
     }
+    
+    
 });
 app.listen(3000);
 
