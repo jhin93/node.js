@@ -19,3 +19,27 @@ ex) http://opentutorials.org:3000/main?id=HTML&page=12
 node.js가 가지고 있는 많은 기능들을 비슷한 것 끼리 그루핑한 것을 모듈 이라고 함. ex) http, fs, url
 
 main.js가 수정되면 노드를 껐다 켜야 되지만, 읽어오는 데이터가 수정되는 건 그냥 창 새로고침만 하면 된다.
+
+
+<!-- pm2 -->
+
+파일 실행하기
+pm2 start '파일명'
+
+파일 변경시 자동반영하기
+pm2 start '파일명' --watch
+
+node.js 적용된 파일 종료
+pm2 stop '파일명'
+
+현재 node.js 적용중인 파일 보기
+pm2 list
+
+오류 확인하기
+pm2 log
+
+
+
+
+
+
