@@ -1,7 +1,39 @@
 var http = require('http');
 var fs = require('fs');
-// url이라는 모듈을 사용할 것이라고 node.js에게 선언. url이라는 모듈은 url이라는 변수를 통해 사용할 것.
+// url이라는 모듈을 사용할 것이라고 node.js에게 선언.
 var url = require('url');
+
+// 본문 렌더링 함수
+function templateHTML(title, list, body){
+  return `
+          <!doctype html>
+          <html>
+          <head>
+            <title>WEB1 - ${title}</title>
+            <meta charset="utf-8">
+          </head>
+          <body>
+            <h1><a href="/">WEB</a></h1>
+            ${list}
+            ${body}
+          </body>
+          </html>      
+        `
+}
+
+// 파일리스트 가져오는 함수
+function templateList(filelist){
+  // while 문으로 리스트 자동생성. filelist 배열을 가져옴
+  var list = '<ul>'
+  var i = 0;
+  while(i < filelist.length){
+    list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`
+    i = i + 1;
+  }
+
+  list = list + '</ul>';
+  return list;
+}
 
 var app = http.createServer(function(request,response){
     var _url = request.url;
@@ -15,76 +47,31 @@ var app = http.createServer(function(request,response){
 
         // 파일 목록을 가져오는 코드로 감싸기. data 폴더의 내용물을 가져오면 콜백함수 실행.
         fs.readdir('./data', function(error, filelist){
-          // 파일리스트 가져오기.
-          console.log(filelist);
           // 파일리스트 가져오고 렌더링파트(var template) 삽입.
           var title = 'Welcome';
           var description = 'Hello, Node.js';
 
-          // while 문으로 리스트 자동생성. filelist 배열을 가져옴
-          var list = '<ul>'
-          var i = 0;
-          while(i < filelist.length){
-            list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`
-            i = i + 1;
-          }
+          // templateList 함수. 가져온 filelist 배열을 인자로 사용. 파일리스트 가져오기.
+          var list = templateList(filelist);
 
-          list = list + '</ul>';
-
-          // 1.html을 복사해와서 백쿼테이션 사이에 삽입.
-          // 2. a href를 '/?id='를 사용해서 대입. 이를 node.js의 var url = require('url');에서 query string으로 가져옴.
-            var template = `
-              <!doctype html>
-              <html>
-              <head>
-                <title>WEB1 - ${title}</title>
-                <meta charset="utf-8">
-              </head>
-              <body>
-                <h1><a href="/">WEB</a></h1>
-                ${list}
-                <h2>${title}</h2>
-                <p>${description}</p>
-              </body>
-              </html>      
-            `
-            response.writeHead(200);
-            response.end(template);
+          // templateHTML 이란 함수를 사용해서 본문을 렌더링.
+          var template = templateHTML(title, list, `<h2>${title}</h2><p>${description}</p>`);
+          response.writeHead(200);
+          response.end(template);
         })
 
       } else {
+        // 여기부턴 쿼리스트링에 값이 있는 사이드 페이지들.
         fs.readdir('./data', function(error, filelist){
 
-          // while 문으로 리스트 자동생성. filelist 배열을 가져옴
-          var list = '<ul>'
-          var i = 0;
-          while(i < filelist.length){
-            list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`
-            i = i + 1;
-          }
-
-        list = list + '</ul>';
-          // 여기부턴 쿼리스트링에 값이 있는 사이드 페이지들.
+          // templateList 함수. 가져온 filelist 배열을 인자로 사용. 파일리스트 가져오기.
+          var list = templateList(filelist);
+          
           // 파일 읽어오기. data 폴더의 파일을 fs.readFile로 읽어옴. 쿼리스트링에 따라 파일명이 생성됨. utf8로 인코딩.
           fs.readFile(`data/${queryData.id}`, 'utf8', function(err, description){
             var title = queryData.id
-            // 1.html을 복사해와서 백쿼테이션 사이에 삽입.
-            // 2. a href를 '/?id='를 사용해서 대입. 이를 node.js의 var url = require('url');에서 query string으로 가져옴.
-            var template = `
-              <!doctype html>
-              <html>
-              <head>
-                <title>WEB1 - ${title}</title>
-                <meta charset="utf-8">
-              </head>
-              <body>
-                <h1><a href="/">WEB</a></h1>
-                ${list}
-                <h2>${title}</h2>
-                <p>${description}</p>
-              </body>
-              </html>      
-            `
+            // templateHTML 이란 함수를 사용해서 본문을 렌더링.
+            var template = templateHTML(title, list, `<h2>${title}</h2><p>${description}</p>`);
             response.writeHead(200);
             response.end(template);
           });
