@@ -41,3 +41,17 @@ var app = http.createServer(function(request,response){
     })
 });
 app.listen(3000);
+
+// node main.js 뭐뭐. 이렇게 터미널에서 실행 시 
+// 1) 노드의 런타임이 돌아가는 위치 
+// 2) 현재 파일의 위치 
+// 3) 추가로 입력한 값 이 순서가 배열에 담겨 나타난다.
+var args = process.argv
+console.log(args);
+console.log(args[2]);
+
+if(args[2] === '1'){
+  console.log('same');
+} else {
+  console.log('not same');
+}
