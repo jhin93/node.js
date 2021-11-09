@@ -1,0 +1,43 @@
+<!-- 아래 주소의 서버로 인풋값들을 전송함. 그러기 위해 name 속성이 필요. -->
+<form action="http://localhost:3000/process_create" method="post">
+    <p><input type="text" name="title"></p>
+    <p>
+        <!-- 여러줄 입력하는 태그 - textarea -->
+        <textarea name="description" id="" cols="30" rows="10"></textarea>
+    </p>
+    <p>
+        <input type="submit">
+    </p>
+</form>
+
+<!-- form 태그는 밸류값들을 사용해 쿼리 스트링을 만들어 해당 url로 보낸다. -->
+<!-- 하지만 위와같이 밸류값으로 쿼리 스트링을 만들어 사용한다면, 누군가가 서버의 정보를 수정할 수 있기에 눈에 보이지 않는 방식을 쓴다.-->
+<!-- 눈에 보이지 않게 정보를 수정하는 방식이 'post'방식.  method="post" 을 사용하면 쿼리스트링에 정보가 보이지 않는다.-->
+<!-- 정보를 수정할 땐 반드시 post 방식을 쓴다. -->
+
+<!-- 정보를 가져오는 방식이 get. method="get"을 쓰거나 method를 쓰지 않으면 디폴트가 get-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
