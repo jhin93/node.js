@@ -5,38 +5,41 @@ var url = require('url');
 // querystring이라는 nodejs의 모듈.
 var qs = require('querystring')
 
-// 본문 렌더링 함수
-function templateHTML(title, list, body, control){
-  return `
-          <!doctype html>
-          <html>
-          <head>
-            <title>WEB1 - ${title}</title>
-            <meta charset="utf-8">
-          </head>
-          <body>
-            <h1><a href="/">WEB</a></h1>
-            ${list}
-            ${control}
-            ${body}
-          </body>
-          </html>      
-        `
-}
-
-// 파일리스트 가져오는 함수
-function templateList(filelist){
-  // while 문으로 리스트 자동생성. filelist 배열을 가져옴
-  var list = '<ul>'
-  var i = 0;
-  while(i < filelist.length){
-    list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`
-    i = i + 1;
+// 리팩토링 코드. 함수를 객체에 넣어 사용.
+var template = {
+  // 본문 렌더링 함수
+  html: function (title, list, body, control){
+    return `
+            <!doctype html>
+            <html>
+            <head>
+              <title>WEB1 - ${title}</title>
+              <meta charset="utf-8">
+            </head>
+            <body>
+              <h1><a href="/">WEB</a></h1>
+              ${list}
+              ${control}
+              ${body}
+            </body>
+            </html>      
+          `
+  },
+  // 파일리스트 가져오는 함수
+  list: function (filelist){
+    // while 문으로 리스트 자동생성. filelist 배열을 가져옴
+    var list = '<ul>'
+    var i = 0;
+    while(i < filelist.length){
+      list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`
+      i = i + 1;
+    }
+  
+    list = list + '</ul>';
+    return list;
   }
-
-  list = list + '</ul>';
-  return list;
 }
+
 
 var app = http.createServer(function(request,response){
 
@@ -54,29 +57,29 @@ var app = http.createServer(function(request,response){
           // 파일리스트 가져오고 렌더링파트(var template) 삽입.
           var title = 'Welcome';
           var description = 'Hello, Node.js';
-          // templateList 함수. 가져온 filelist 배열을 인자로 사용. 파일리스트 가져오기.
-          var list = templateList(filelist);
-          // templateHTML 이란 함수를 사용해서 본문을 렌더링.
-          var template = templateHTML(title, list, 
+
+          // 가져온 filelist 배열을 인자로 사용. 파일리스트 가져오기.
+          var list = template.list(filelist);
+          // 리팩토링 후엔 template 이란 변수를 쓰면 안됨. 위에 같은 이름으로 객체 만들었으니까.
+          var html = template.html(title, list, 
             `<h2>${title}</h2><p>${description}</p>`,
             // 홈페이지에서 쿼리스트링이 있는 경우에만, 즉 사이드페이지에서만 update가 될 수 있도록 pathname === '/' 조건에서는 `<a href="/update">update</a>`는 뺀다.
             `<a href="/create">create</a>`
             );
           response.writeHead(200);
-          response.end(template);
+          response.end(html);
         })
 
       } else {
         // 여기부턴 쿼리스트링에 값이 있는 사이드 페이지들.
         fs.readdir('./data', function(error, filelist){
-          // templateList 함수. 가져온 filelist 배열을 인자로 사용. 파일리스트 가져오기.
-          var list = templateList(filelist);
           // 파일 읽어오기. data 폴더의 파일을 fs.readFile로 읽어옴. 쿼리스트링에 따라 파일명이 생성됨. utf8로 인코딩.
           fs.readFile(`data/${queryData.id}`, 'utf8', function(err, description){
             var title = queryData.id
-            // templateHTML 이란 함수를 사용해서 본문을 렌더링.
+            // 가져온 filelist 배열을 인자로 사용. 파일리스트 가져오기.
+            var list = template.list(filelist);
             // 삭제 버튼은 링크(a)가 아닌 폼으로 작성. 삭제 버튼 클릭시 path가 delete_process으로 변경.
-            var template = templateHTML(title, list, 
+            var html = template.html(title, list, 
               `<h2>${title}</h2><p>${description}</p>`,
               ` 
                 <a href="/create">create</a> 
@@ -87,7 +90,7 @@ var app = http.createServer(function(request,response){
                 </form>
               `);
             response.writeHead(200);
-            response.end(template);
+            response.end(html);
           });
         });
       }
@@ -98,10 +101,9 @@ var app = http.createServer(function(request,response){
       fs.readdir('./data', function(error, filelist){
         // 파일리스트 가져오고 렌더링파트(var template) 삽입.
         var title = 'WEB - create';
-        // templateList 함수. 가져온 filelist 배열을 인자로 사용. 파일리스트 가져오기.
-        var list = templateList(filelist);
-        // templateHTML 이란 함수를 사용해서 본문을 렌더링.
-        var template = templateHTML(title, list, `
+        // 가져온 filelist 배열을 인자로 사용. 파일리스트 가져오기.
+        var list = template.list(filelist);
+        var html = template.html(title, list, `
           <!-- 아래 주소의 서버로 인풋값들을 전송함. 그러기 위해 name 속성이 필요. -->
           <form action="/create_process" method="post">
               <p><input type="text" name="title" placeholder="title"></p>
@@ -115,7 +117,7 @@ var app = http.createServer(function(request,response){
           </form>
         `, '');
         response.writeHead(200);
-        response.end(template);
+        response.end(html);
       });
 
       // 글 작성(create) 제출 로직.
@@ -152,13 +154,12 @@ var app = http.createServer(function(request,response){
     } else if(pathname === '/update'){
         // 여기부턴 쿼리스트링에 값이 있는 사이드 페이지들.
         fs.readdir('./data', function(error, filelist){
-          // templateList 함수. 가져온 filelist 배열을 인자로 사용. 파일리스트 가져오기.
-          var list = templateList(filelist);
+          // 가져온 filelist 배열을 인자로 사용. 파일리스트 가져오기.
+          var list = template.list(filelist);
           // 파일 읽어오기. data 폴더의 파일을 fs.readFile로 읽어옴. 쿼리스트링에 따라 파일명이 생성됨. utf8로 인코딩.
           fs.readFile(`data/${queryData.id}`, 'utf8', function(err, description){
             var title = queryData.id
-            // templateHTML 이란 함수를 사용해서 본문을 렌더링.
-            var template = templateHTML(title, list, 
+            var html = template.html(title, list, 
               // 1. 글 수정 ui 삽입.
               // 2. 수정이니까 이미 삽입된 input의 value를 불러와야 함. value="${title}"
               // 3. 내용을 수정하고 어떤 파일을 수정할 것인지를 알아야 함. 기존 title을 쓰면 제목을 수정했을 때는 파일을 못찾음. 그래서 hidden 인풋으로 id 밸류 생성.
@@ -177,7 +178,7 @@ var app = http.createServer(function(request,response){
               `,
               `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
             response.writeHead(200);
-            response.end(template);
+            response.end(html);
           });
         });
 
