@@ -6,7 +6,7 @@ var url = require('url');
 var qs = require('querystring')
 
 // 본문 렌더링 함수
-function templateHTML(title, list, body){
+function templateHTML(title, list, body, control){
   return `
           <!doctype html>
           <html>
@@ -17,7 +17,7 @@ function templateHTML(title, list, body){
           <body>
             <h1><a href="/">WEB</a></h1>
             ${list}
-            <a href="/create">create</a>
+            ${control}
             ${body}
           </body>
           </html>      
@@ -39,25 +39,29 @@ function templateList(filelist){
 }
 
 var app = http.createServer(function(request,response){
+
+    // 변수모음
     var _url = request.url;
     var queryData = url.parse(_url, true).query;
     var pathname = url.parse(_url, true).pathname;
+
     // 접속한 곳이 루트(/)라면, 정상 렌더링.
     if(pathname === '/'){
       // 하지만 pathname만으로는 메인페이지와 사이드페이지들을 구분할 수 없기에 .id로 쿼리스트링이 undefined일 때 즉, 메인페이지를 조건으로 새롭게 렌더링.
       if(queryData.id === undefined){
-
         // 파일 목록을 가져오는 코드로 감싸기. data 폴더의 내용물을 가져오면 콜백함수 실행.
         fs.readdir('./data', function(error, filelist){
           // 파일리스트 가져오고 렌더링파트(var template) 삽입.
           var title = 'Welcome';
           var description = 'Hello, Node.js';
-
           // templateList 함수. 가져온 filelist 배열을 인자로 사용. 파일리스트 가져오기.
           var list = templateList(filelist);
-
           // templateHTML 이란 함수를 사용해서 본문을 렌더링.
-          var template = templateHTML(title, list, `<h2>${title}</h2><p>${description}</p>`);
+          var template = templateHTML(title, list, 
+            `<h2>${title}</h2><p>${description}</p>`,
+            // 홈페이지에서 쿼리스트링이 있는 경우에만, 즉 사이드페이지에서만 update가 될 수 있도록 pathname === '/' 조건에서는 `<a href="/update">update</a>`는 뺀다.
+            `<a href="/create">create</a>`
+            );
           response.writeHead(200);
           response.end(template);
         })
@@ -65,15 +69,15 @@ var app = http.createServer(function(request,response){
       } else {
         // 여기부턴 쿼리스트링에 값이 있는 사이드 페이지들.
         fs.readdir('./data', function(error, filelist){
-
           // templateList 함수. 가져온 filelist 배열을 인자로 사용. 파일리스트 가져오기.
           var list = templateList(filelist);
-          
           // 파일 읽어오기. data 폴더의 파일을 fs.readFile로 읽어옴. 쿼리스트링에 따라 파일명이 생성됨. utf8로 인코딩.
           fs.readFile(`data/${queryData.id}`, 'utf8', function(err, description){
             var title = queryData.id
             // templateHTML 이란 함수를 사용해서 본문을 렌더링.
-            var template = templateHTML(title, list, `<h2>${title}</h2><p>${description}</p>`);
+            var template = templateHTML(title, list, 
+              `<h2>${title}</h2><p>${description}</p>`,
+              `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
             response.writeHead(200);
             response.end(template);
           });
@@ -84,10 +88,8 @@ var app = http.createServer(function(request,response){
       fs.readdir('./data', function(error, filelist){
         // 파일리스트 가져오고 렌더링파트(var template) 삽입.
         var title = 'WEB - create';
-
         // templateList 함수. 가져온 filelist 배열을 인자로 사용. 파일리스트 가져오기.
         var list = templateList(filelist);
-
         // templateHTML 이란 함수를 사용해서 본문을 렌더링.
         var template = templateHTML(title, list, `
           <!-- 아래 주소의 서버로 인풋값들을 전송함. 그러기 위해 name 속성이 필요. -->
@@ -101,7 +103,7 @@ var app = http.createServer(function(request,response){
                   <input type="submit">
               </p>
           </form>
-        `);
+        `, '');
         response.writeHead(200);
         response.end(template);
       });
@@ -123,6 +125,7 @@ var app = http.createServer(function(request,response){
         console.log(post.title);
 
         //    받아온 데이터로 파일생성하기.
+        
         // fs.writeFile('message.txt', 'Hello Node.js', 'utf8', callback);
         // fs.writeFile(data 디렉토리/파일 이름으로 사용할 title, 파일내용으로 사용할 description, 'utf8', 콜백함수)
         fs.writeFile(`data/${title}`, description, 'utf8', function(err){
