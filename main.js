@@ -2,6 +2,8 @@ var http = require('http');
 var fs = require('fs');
 // url이라는 모듈을 사용할 것이라고 node.js에게 선언.
 var url = require('url');
+// querystring이라는 nodejs의 모듈.
+var qs = require('querystring')
 
 // 본문 렌더링 함수
 function templateHTML(title, list, body){
@@ -89,7 +91,7 @@ var app = http.createServer(function(request,response){
         // templateHTML 이란 함수를 사용해서 본문을 렌더링.
         var template = templateHTML(title, list, `
           <!-- 아래 주소의 서버로 인풋값들을 전송함. 그러기 위해 name 속성이 필요. -->
-          <form action="http://localhost:3000/process_create" method="post">
+          <form action="http://localhost:3000/create_process" method="post">
               <p><input type="text" name="title" placeholder="title"></p>
               <p>
                   <!-- 여러줄 입력하는 태그 - textarea -->
@@ -103,6 +105,26 @@ var app = http.createServer(function(request,response){
         response.writeHead(200);
         response.end(template);
       });
+    } else if(pathname === '/create_process'){
+      var body=''
+      // .on 메소드로 이벤트 바인딩 사용(data라는 이벤트). submit으로 데이터가 전송되면 request로 body에 추가.
+      request.on('data', function(data){
+        body = body + data;
+      })
+      // .on 메소드로 이벤트 바인딩 사용(end라는 이벤트).바로 위 request에서 데이터를 더 받지 않으면, 아래 콜백함수를 호출.
+      request.on('end',function(){
+        // querystring으로 받아온 데이터를 parse해서 빈 body에 대입.
+        var post = qs.parse(body);
+        // 데이터 중 title
+        var title = post.title;
+        // 데이터 중 description
+        var description = post.description;
+        // 받아온 데이터를 pm2 log에서 확인 가능.
+        console.log(post.title);
+      })
+
+      response.writeHead(200);
+      response.end('success');
     } else {
       response.writeHead(404);
       response.end('Not found');
