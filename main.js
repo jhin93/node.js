@@ -75,7 +75,7 @@ var app = http.createServer(function(request,response){
           fs.readFile(`data/${queryData.id}`, 'utf8', function(err, description){
             var title = queryData.id
             // templateHTML 이란 함수를 사용해서 본문을 렌더링.
-            // 삭제 버튼은 링크(a)가 아닌 폼으로 작성. 삭제 버튼 클릭시 쿼리스트링 delete_process으로 변경.
+            // 삭제 버튼은 링크(a)가 아닌 폼으로 작성. 삭제 버튼 클릭시 path가 delete_process으로 변경.
             var template = templateHTML(title, list, 
               `<h2>${title}</h2><p>${description}</p>`,
               ` 
@@ -213,6 +213,33 @@ var app = http.createServer(function(request,response){
             response.end('');            
           })
         })
+        console.log(post);  
+      })
+
+      // 글 삭제(delete) 로직. 
+
+    } else if (pathname === '/delete_process'){
+      // post 방식으로 받은 데이터를 가지고 오기.
+      var body=''
+      // .on 메소드로 이벤트 바인딩 사용(data라는 이벤트). submit으로 데이터가 전송되면 request로 body에 추가.
+      request.on('data', function(data){
+        body = body + data;
+      })
+      // .on 메소드로 이벤트 바인딩 사용(end라는 이벤트).바로 위 request에서 데이터를 더 받지 않으면, 아래 콜백함수를 호출.
+      request.on('end',function(){
+        // querystring(최상단 변수 확인)으로 받아온 데이터를 parse해서 빈 body에 대입.
+        var post = qs.parse(body);
+        // 받은 id 값. 지울거니까 title, description은 필요없음.
+        var id = post.id;
+        // fs.unlink 메소드 사용.
+        fs.unlink(`data/${id}`, function(error){
+            // "writeHead"는 response 객체의 메소드에서 헤더 정보를 응답에 작성해서 내보내는 것이다. 첫번째 인자는 상태 코드를 지정하고 두번째인수에 헤더 정보를 연관 배열로 정리한 것이다.
+            // 302는 다른 곳으로 리다이렉션 시킨다. 두번째 인자는 리다이렉션 시킬 위치.
+            // 글이 삭제되면 홈으로 리다이렉션.
+            response.writeHead(302, {Location: `/`});
+            response.end('');  
+        })
+
         console.log(post);  
       })
     } else {
