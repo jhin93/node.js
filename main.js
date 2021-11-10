@@ -4,9 +4,10 @@ var fs = require('fs');
 var url = require('url');
 // querystring이라는 nodejs의 모듈.
 var qs = require('querystring');
-
 // 모듈사용
 var template = require('./lib/template.js');
+// 입력정보 보안
+var path = require('path');
 
 
 var app = http.createServer(function(request,response){
@@ -41,8 +42,10 @@ var app = http.createServer(function(request,response){
       } else {
         // 여기부턴 쿼리스트링에 값이 있는 사이드 페이지들.
         fs.readdir('./data', function(error, filelist){
+          // 보안을 위해 선언한 'path'에 parse 메소드를 쓰고 그 안에 보호대상을 삽입. 그리고 base까지만 읽도록 .base를 추가하면 그보다 상위 디렉토리는 읽을 수 없음. password.js 참고.
+          var filteredId = path.parse(queryData.id).base;
           // 파일 읽어오기. data 폴더의 파일을 fs.readFile로 읽어옴. 쿼리스트링에 따라 파일명이 생성됨. utf8로 인코딩.
-          fs.readFile(`data/${queryData.id}`, 'utf8', function(err, description){
+          fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
             var title = queryData.id
             // 가져온 filelist 배열을 인자로 사용. 파일리스트 가져오기.
             var list = template.list(filelist);
@@ -124,8 +127,10 @@ var app = http.createServer(function(request,response){
         fs.readdir('./data', function(error, filelist){
           // 가져온 filelist 배열을 인자로 사용. 파일리스트 가져오기.
           var list = template.list(filelist);
+          // 보안을 위해 선언한 'path'에 parse 메소드를 쓰고 그 안에 보호대상을 삽입. 그리고 base까지만 읽도록 .base를 추가하면 그보다 상위 디렉토리는 읽을 수 없음. password.js 참고.
+          var filteredId = path.parse(queryData.id).base
           // 파일 읽어오기. data 폴더의 파일을 fs.readFile로 읽어옴. 쿼리스트링에 따라 파일명이 생성됨. utf8로 인코딩.
-          fs.readFile(`data/${queryData.id}`, 'utf8', function(err, description){
+          fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
             var title = queryData.id
             var html = template.html(title, list, 
               // 1. 글 수정 ui 삽입.
@@ -199,8 +204,10 @@ var app = http.createServer(function(request,response){
         var post = qs.parse(body);
         // 받은 id 값. 지울거니까 title, description은 필요없음.
         var id = post.id;
+        // 보안을 위해 선언한 'path'에 parse 메소드를 쓰고 그 안에 보호대상을 삽입. 그리고 base까지만 읽도록 .base를 추가하면 그보다 상위 디렉토리는 읽을 수 없음. password.js 참고.
+        var filteredId = path.parse(id).base;
         // fs.unlink 메소드 사용.
-        fs.unlink(`data/${id}`, function(error){
+        fs.unlink(`data/${filteredId}`, function(error){
             // "writeHead"는 response 객체의 메소드에서 헤더 정보를 응답에 작성해서 내보내는 것이다. 첫번째 인자는 상태 코드를 지정하고 두번째인수에 헤더 정보를 연관 배열로 정리한 것이다.
             // 302는 다른 곳으로 리다이렉션 시킨다. 두번째 인자는 리다이렉션 시킬 위치.
             // 글이 삭제되면 홈으로 리다이렉션.
