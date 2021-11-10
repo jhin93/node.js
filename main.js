@@ -3,42 +3,10 @@ var fs = require('fs');
 // url이라는 모듈을 사용할 것이라고 node.js에게 선언.
 var url = require('url');
 // querystring이라는 nodejs의 모듈.
-var qs = require('querystring')
+var qs = require('querystring');
 
-// 리팩토링 코드. 함수를 객체에 넣어 사용.
-var template = {
-  // 본문 렌더링 함수
-  html: function (title, list, body, control){
-    return `
-            <!doctype html>
-            <html>
-            <head>
-              <title>WEB1 - ${title}</title>
-              <meta charset="utf-8">
-            </head>
-            <body>
-              <h1><a href="/">WEB</a></h1>
-              ${list}
-              ${control}
-              ${body}
-            </body>
-            </html>      
-          `
-  },
-  // 파일리스트 가져오는 함수
-  list: function (filelist){
-    // while 문으로 리스트 자동생성. filelist 배열을 가져옴
-    var list = '<ul>'
-    var i = 0;
-    while(i < filelist.length){
-      list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`
-      i = i + 1;
-    }
-  
-    list = list + '</ul>';
-    return list;
-  }
-}
+// 모듈사용
+var template = require('./lib/template.js');
 
 
 var app = http.createServer(function(request,response){
@@ -193,7 +161,7 @@ var app = http.createServer(function(request,response){
       })
       // .on 메소드로 이벤트 바인딩 사용(end라는 이벤트).바로 위 request에서 데이터를 더 받지 않으면, 아래 콜백함수를 호출.
       request.on('end',function(){
-        // querystring(최상단 변수 확인)으로 받아온 데이터를 parse해서 빈 body에 대입.
+        // querystring(최상단 변수 확인)으로 받아온 데이터를 parse해서 빈 body에 대입. console.log로 확인가능.
         var post = qs.parse(body);
         // 받은 id 값
         var id = post.id;
@@ -214,7 +182,6 @@ var app = http.createServer(function(request,response){
             response.end('');            
           })
         })
-        console.log(post);  
       })
 
       // 글 삭제(delete) 로직. 
@@ -228,7 +195,7 @@ var app = http.createServer(function(request,response){
       })
       // .on 메소드로 이벤트 바인딩 사용(end라는 이벤트).바로 위 request에서 데이터를 더 받지 않으면, 아래 콜백함수를 호출.
       request.on('end',function(){
-        // querystring(최상단 변수 확인)으로 받아온 데이터를 parse해서 빈 body에 대입.
+        // querystring(최상단 변수 확인)으로 받아온 데이터를 parse해서 빈 body에 대입. console.log로 확인가능.
         var post = qs.parse(body);
         // 받은 id 값. 지울거니까 title, description은 필요없음.
         var id = post.id;
@@ -240,8 +207,6 @@ var app = http.createServer(function(request,response){
             response.writeHead(302, {Location: `/`});
             response.end('');  
         })
-
-        console.log(post);  
       })
     } else {
       response.writeHead(404);
