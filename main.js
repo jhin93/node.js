@@ -113,7 +113,7 @@ var app = http.createServer(function(request,response){
       })
       // .on 메소드로 이벤트 바인딩 사용(end라는 이벤트).바로 위 request에서 데이터를 더 받지 않으면, 아래 콜백함수를 호출.
       request.on('end',function(){
-        // querystring으로 받아온 데이터를 parse해서 빈 body에 대입.
+        // querystring(최상단 변수 확인)으로 받아온 데이터를 parse해서 빈 body에 대입.
         var post = qs.parse(body);
         // 데이터 중 title
         var title = post.title;
@@ -121,10 +121,17 @@ var app = http.createServer(function(request,response){
         var description = post.description;
         // 받아온 데이터를 pm2 log에서 확인 가능.
         console.log(post.title);
-      })
 
-      response.writeHead(200);
-      response.end('success');
+        //    받아온 데이터로 파일생성하기.
+        // fs.writeFile('message.txt', 'Hello Node.js', 'utf8', callback);
+        // fs.writeFile(data 디렉토리/파일 이름으로 사용할 title, 파일내용으로 사용할 description, 'utf8', 콜백함수)
+        fs.writeFile(`data/${title}`, description, 'utf8', function(err){
+          // "writeHead"는 response 객체의 메소드에서 헤더 정보를 응답에 작성해서 내보내는 것이다. 첫번째 인자는 상태 코드를 지정하고 두번째인수에 헤더 정보를 연관 배열로 정리한 것이다.
+          // 302는 다른 곳으로 리다이렉션 시킨다. 두번째 인자는 리다이렉션 시킬 위치.
+          response.writeHead(302, {Location: `/?id=${title}`});
+          response.end('');            
+        })
+      })
     } else {
       response.writeHead(404);
       response.end('Not found');
