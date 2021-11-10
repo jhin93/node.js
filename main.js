@@ -9,7 +9,9 @@ var template = require('./lib/template.js');
 // 입력정보 보안
 var path = require('path');
 
-
+// .createServer() 메소드. 공식문서에서 확인할 수 있음. 인자로 함수를 받음.
+// http.server를 리턴함. 그걸 app에 대입한 것. 그리고 server.listen()메소드를 쓰고 3000을 port로 사용.
+// server.listen([port][, host][, backlog][, callback]). 대괄호는 생략가능한 인자.
 var app = http.createServer(function(request,response){
 
     // 변수모음
