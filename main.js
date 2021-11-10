@@ -75,9 +75,17 @@ var app = http.createServer(function(request,response){
           fs.readFile(`data/${queryData.id}`, 'utf8', function(err, description){
             var title = queryData.id
             // templateHTML 이란 함수를 사용해서 본문을 렌더링.
+            // 삭제 버튼은 링크(a)가 아닌 폼으로 작성. 삭제 버튼 클릭시 쿼리스트링 delete_process으로 변경.
             var template = templateHTML(title, list, 
               `<h2>${title}</h2><p>${description}</p>`,
-              `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
+              ` 
+                <a href="/create">create</a> 
+                <a href="/update?id=${title}">update</a>
+                <form action="delete_process" method="post">
+                  <input type="hidden" name="id" value="${title}">
+                  <input type="submit" value="delete">
+                </form>
+              `);
             response.writeHead(200);
             response.end(template);
           });
