@@ -38,8 +38,16 @@ pm2 list
 오류 확인하기
 pm2 log
 
+<!-- mysql -->
 
+mysql 설치 
+npm install mysql --save 
+--save는 dependencies에 추가한다.
 
+mysql 오류 :
+Error: ER_NOT_SUPPORTED_AUTH_MODE: Client does not support authentication protocol requested by server; consider upgrading MySQL client
 
-
+해결 : mysql 접속 후 다음 문장 입력
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '비밀번호';
+https://stackoverflow.com/questions/50093144/mysql-8-0-client-does-not-support-authentication-protocol-requested-by-server
 
