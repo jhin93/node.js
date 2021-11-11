@@ -8,6 +8,17 @@ var qs = require('querystring');
 var template = require('./lib/template.js');
 // 입력정보 보안
 var path = require('path');
+// mysql 모듈.
+var mysql = require('mysql');
+// mysql모듈에 createConnection 메소드로 접속, 객체를 전달. 변수에 대입.
+var db = mysql.createConnection({
+  host:'localhost',
+  user:'root',
+  password:'wlsrud20',
+  database:'opentutorials'
+});
+// 실제 접속
+db.connect();
 
 // .createServer() 메소드. 공식문서에서 확인할 수 있음. 인자로 함수를 받음.
 // http.server를 리턴함. 그걸 app에 대입한 것. 그리고 server.listen()메소드를 쓰고 3000을 port로 사용.
@@ -23,6 +34,7 @@ var app = http.createServer(function(request,response){
     if(pathname === '/'){
       // 하지만 pathname만으로는 메인페이지와 사이드페이지들을 구분할 수 없기에 .id로 쿼리스트링이 undefined일 때 즉, 메인페이지를 조건으로 새롭게 렌더링.
       if(queryData.id === undefined){
+        /*  mysql로 대체.
         // 파일 목록을 가져오는 코드로 감싸기. data 폴더의 내용물을 가져오면 콜백함수 실행.
         fs.readdir('./data', function(error, filelist){
           // 파일리스트 가져오고 렌더링파트(var template) 삽입.
@@ -40,7 +52,16 @@ var app = http.createServer(function(request,response){
           response.writeHead(200);
           response.end(html);
         })
-
+        */
+        // mysql.js의 로직을 여기에 적용.
+        // 두번째 인자에는 첫번째 인자인 sql문이 실행된 서버가 응답된 결과를 처리할 수 있도록 콜백함수를 줌.
+        // 콜백함수의 대표형식은 첫번째 인자로 실패했을 때의 error, 두번째 인자로 성공했을 떄의 topics 
+        db.query(`SELECT * FROM topic`, function(error, topics){
+          console.log(topics); // pm2 log로 확인. 확인한 결과물로 웹페이지 생성.
+          // 웹페이지 마무리 대표형식
+          response.writeHead(200);
+          response.end('Success');
+        })
       } else {
         // 여기부턴 쿼리스트링에 값이 있는 사이드 페이지들.
         fs.readdir('./data', function(error, filelist){
