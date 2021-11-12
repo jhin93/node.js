@@ -39,97 +39,19 @@ var app = http.createServer(function(request,response){
 
       // 글 수정(update) 로직
     } else if(pathname === '/update'){
-        // mysql 대체
-        db.query('SELECT * FROM topic', function(error, topics){
-          if(error){
-            throw error;
-          }
-        // 여기부턴 쿼리스트링에 값이 있는 사이드 페이지들.
-          // 수정할 글 가져오기. 선택한 아이디로 가져오기
-          db.query(`SELECT * FROM topic WHERE id=?`, [queryData.id] , function(error2, topic){
-            if(error2){
-              throw error2;
-            }
-            // 업데이트할 컨텐츠 가져오기. db.query로 가져온 topics. 우클릭 페이지 소스보기 - 수정하려고 하는 데이터의 id값이 1이라는 걸 input hidden으로 작성.
-            var list = template.list(topics);
-            // 타이틀은 topic[0].title
-            var html = template.html(topic[0].title, list, 
-              // 수정하려는 행에 대한 식별자 - topic[0].id
-              // 기존의 제목 - topic[0].title, 본문 - topic[0].description
-              // 수정하고 나서 쓸 쿼리스트링 - topic[0].id
-              `
-              <form action="/update_process" method="post">
-                <input type="hidden" name="id" value="${topic[0].id}">
-                <p><input type="text" name="title" placeholder="title" value="${topic[0].title}"></p>
-                <p>
-                    <!-- 여러줄 입력하는 태그 - textarea -->
-                    <textarea name="description" placeholder="description" id="" cols="30" rows="10">${topic[0].description}</textarea>
-                </p>
-                <p>
-                    <input type="submit">
-                </p>
-              </form>
-              `,
-              `<a href="/create">create</a> <a href="/update?id=${topic[0].id}">update</a>`);
-            response.writeHead(200);
-            response.end(html);
-          });
-        });
+        topic.update(request,response);
 
-        // 글 수정 제출(update_process) 로직
-
+      // 글 수정 제출(update_process) 로직
     } else if (pathname === '/update_process'){
-      // post 방식으로 받은 데이터를 가지고 오기.
-      var body=''
-      // .on 메소드로 이벤트 바인딩 사용(data라는 이벤트). submit으로 데이터가 전송되면 request로 body에 추가.
-      request.on('data', function(data){
-        body = body + data;
-      })
-      // .on 메소드로 이벤트 바인딩 사용(end라는 이벤트).바로 위 request에서 데이터를 더 받지 않으면, 아래 콜백함수를 호출.
-      request.on('end',function(){
-        var post = qs.parse(body);
-        // mysql로 대체. 
-        //테이블 수정하는 SQL문 작성. WHERE 빠지면 절대 안됨. 모든 행 수정됨
-        db.query('UPDATE topic SET title=?, description=?, author_id=1 WHERE id=?', [post.title, post.description, post.id], function(error, result){
-            // "writeHead"는 response 객체의 메소드에서 헤더 정보를 응답에 작성해서 내보내는 것이다. 첫번째 인자는 상태 코드를 지정하고 두번째인수에 헤더 정보를 연관 배열로 정리한 것이다.
-            // 302는 다른 곳으로 리다이렉션 시킨다. 두번째 인자는 리다이렉션 시킬 위치. 여기서는 post.id를 쿼리스트링으로 받음.
-            response.writeHead(302, {Location: `/?id=${post.id}`});
-            response.end();  
-        })
-      })
+        topic.update_process(request, response);
 
       // 글 삭제(delete) 로직. 
-
     } else if (pathname === '/delete_process'){
-      // post 방식으로 받은 데이터를 가지고 오기.
-      var body=''
-      // .on 메소드로 이벤트 바인딩 사용(data라는 이벤트). submit으로 데이터가 전송되면 request로 body에 추가.
-      request.on('data', function(data){
-        body = body + data;
-      })
-      // .on 메소드로 이벤트 바인딩 사용(end라는 이벤트).바로 위 request에서 데이터를 더 받지 않으면, 아래 콜백함수를 호출.
-      request.on('end',function(){
-        // querystring(최상단 변수 확인)으로 받아온 데이터를 parse해서 빈 body에 대입. console.log로 확인가능.
-        var post = qs.parse(body);
-        // mysql 대체
-        // 삭제할 로우의 id - post.id
-        db.query('DELETE FROM topic WHERE id=?', [post.id], function(error, result){
-            if(error){
-              throw error;
-            }
-            // "writeHead"는 response 객체의 메소드에서 헤더 정보를 응답에 작성해서 내보내는 것이다. 첫번째 인자는 상태 코드를 지정하고 두번째인수에 헤더 정보를 연관 배열로 정리한 것이다.
-            // 302는 다른 곳으로 리다이렉션 시킨다. 두번째 인자는 리다이렉션 시킬 위치.
-            // 글이 삭제되면 홈으로 리다이렉션.
-            response.writeHead(302, {Location: `/`});
-            response.end('');  
-        })
-      })
+        topic.delete_process(request, response);
     } else {
       response.writeHead(404);
       response.end('Not found');
     }
-    
-    
 });
 app.listen(3000);
 
