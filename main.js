@@ -7,6 +7,8 @@ var qs = require('querystring');
 var template = require('./lib/template.js');
 // db 모듈
 var db = require('./lib/db');
+// topic 테이블 모듈
+var topic = require('./lib/topic');
 
 // .createServer() 메소드. 공식문서에서 확인할 수 있음. 인자로 함수를 받음.
 // http.server를 리턴함. 그걸 app에 대입한 것. 그리고 server.listen()메소드를 쓰고 3000을 port로 사용.
@@ -22,24 +24,7 @@ var app = http.createServer(function(request,response){
     if(pathname === '/'){
       // 하지만 pathname만으로는 메인페이지와 사이드페이지들을 구분할 수 없기에 .id로 쿼리스트링이 undefined일 때 즉, 메인페이지를 조건으로 새롭게 렌더링.
       if(queryData.id === undefined){
-        // mysql.js의 로직을 여기에 적용.
-        // 두번째 인자에는 첫번째 인자인 sql문이 실행된 서버가 응답된 결과를 처리할 수 있도록 콜백함수를 줌.
-        // 콜백함수의 대표형식은 첫번째 인자로 실패했을 때의 error, 두번째 인자로 성공했을 떄의 topics 
-        db.query(`SELECT * FROM topic`, function(error, topics){
-          var title = 'Welcome';
-          var description = 'Hello, Node.js';
-          // 가져온 filelist 배열을 인자로 사용. template.js 모듈에서 list 함수 가져와서 데이터(topics)대입.
-          var list = template.list(topics);
-          // template.html에 각 인자들이 ,로 구분되어 대입되고, 그 결과물을 변수(html)에 담음. control엔 ui 요소담음(ex a 태그)
-          var html = template.html(title, list, 
-            `<h2>${title}</h2>${description}`,
-            // 홈페이지에서 쿼리스트링이 있는 경우에만, 즉 사이드페이지에서만 update가 될 수 있도록 pathname === '/' 조건에서는 `<a href="/update">update</a>`는 뺀다.
-            `<a href="/create">create</a>`
-          );
-          // 웹페이지 마무리 대표형식
-          response.writeHead(200);
-          response.end(html);
-        })
+        topic.home(request, response);
       } else {
         // mysql 대체
         // 글 리스트에서 글을 선택할 시 상세 보기
