@@ -228,12 +228,12 @@ var app = http.createServer(function(request,response){
       request.on('end',function(){
         // querystring(최상단 변수 확인)으로 받아온 데이터를 parse해서 빈 body에 대입. console.log로 확인가능.
         var post = qs.parse(body);
-        // 받은 id 값. 지울거니까 title, description은 필요없음.
-        var id = post.id;
-        // 보안을 위해 선언한 'path'에 parse 메소드를 쓰고 그 안에 보호대상을 삽입. 그리고 base까지만 읽도록 .base를 추가하면 그보다 상위 디렉토리는 읽을 수 없음. password.js 참고.
-        var filteredId = path.parse(id).base;
-        // fs.unlink 메소드 사용.
-        fs.unlink(`data/${filteredId}`, function(error){
+        // mysql 대체
+        // 삭제할 로우의 id - post.id
+        db.query('DELETE FROM topic WHERE id=?', [post.id], function(error, result){
+            if(error){
+              throw error;
+            }
             // "writeHead"는 response 객체의 메소드에서 헤더 정보를 응답에 작성해서 내보내는 것이다. 첫번째 인자는 상태 코드를 지정하고 두번째인수에 헤더 정보를 연관 배열로 정리한 것이다.
             // 302는 다른 곳으로 리다이렉션 시킨다. 두번째 인자는 리다이렉션 시킬 위치.
             // 글이 삭제되면 홈으로 리다이렉션.
