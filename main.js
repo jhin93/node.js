@@ -62,13 +62,18 @@ var app = http.createServer(function(request,response){
             throw error; // 여기서 nodejs가 이후의 코드진행을 중지하고 콘솔에 에러를 던짐.
           }
           // id 값에 따라 각 칼럼의 데이터를 가져오기. ex) id값이 3인 결과를 가져오는 sql문 - SELECT * FROM topic WHERE id = 3;
-          // 들어오는 id는 queryData.id. 처리하는 콜백함수에서 결과물은 topic에 담기.
+          // 들어오는 id는 queryData.id 처리하는 콜백함수에서 결과물은 topic에 담기.
           // 익명의 누군가로부터 받은 입력값으로부터 db 보호를 위해 id=? 처리를 하고 두번째 인자로 배열에 데이터를 담는다.
-          db.query(`SELECT * FROM topic WHERE id=?`, [queryData.id] , function(error2, topic){
+
+          // topic과 author의 JOIN
+          // SELECT * FROM topic 를 왼쪽에 두고(LEFT) author 를 합친다(JOIN). 다음과 같은 조건으로 (topic.author_id=author.id)
+          // 다만 WHERE id=? 일때, topic의 id인지, author의 id인지 알 수가 없다. 그래서 topic의 id값이다(topic.id=?)라고 작성.
+          db.query(`SELECT * FROM topic LEFT JOIN author ON topic.author_id=author.id WHERE topic.id=?`, [queryData.id] , function(error2, topic){
             if(error2){
               throw error; // 여기서 nodejs가 이후의 코드진행을 중지하고 콘솔에 에러를 던짐.
             }
-            console.log(topic[0].title);
+            // join된 데이터 확인.
+            console.log(topic);
             // topic은 배열에 클릭한 아이디(프라이머리 키)에 해당하는 1개의 객체가 배열에 담겨서 옴. 그래서 topic[0]으로 해야 내용물을 사용할 수 있음.
             var title = topic[0].title; // 타이틀
             var description = topic[0].description; // 본문
@@ -76,7 +81,8 @@ var app = http.createServer(function(request,response){
             var list = template.list(topics);
             // template.html에 각 인자들이 ,로 구분되어 대입되고, 그 결과물을 변수(html)에 담음. control엔 ui 요소담음(ex a 태그)
             var html = template.html(title, list, 
-              `<h2>${title}</h2>${description}`,
+              // JOIN한 테이블에서 topic[0].name의 이름으로 저자를 추가한다.
+              `<h2>${title}</h2>${description}<p>by ${topic[0].name}</p>`,
               // 홈페이지에서 쿼리스트링이 있는 경우에만, 즉 사이드페이지에서만 update가 될 수 있도록 pathname === '/' 조건에서는 `<a href="/update">update</a>`는 뺀다.
               ` 
                 <a href="/create">create</a> 
@@ -127,7 +133,7 @@ var app = http.createServer(function(request,response){
         response.end(html);
       })
 
-      // 글 작성(create) 제출 로직.
+      // 글 작성 제출(create_process)  로직.
 
     } else if(pathname === '/create_process'){
       var body=''
