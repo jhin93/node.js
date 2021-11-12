@@ -1,24 +1,12 @@
 var http = require('http');
-var fs = require('fs');
 // url이라는 모듈을 사용할 것이라고 node.js에게 선언.
 var url = require('url');
 // querystring이라는 nodejs의 모듈.
 var qs = require('querystring');
-// 모듈사용
+// 템플릿 모듈
 var template = require('./lib/template.js');
-// 입력정보 보안
-var path = require('path');
-// mysql 모듈.
-var mysql = require('mysql');
-// mysql모듈에 createConnection 메소드로 접속, 객체를 전달. 변수에 대입.
-var db = mysql.createConnection({
-  host:'localhost',
-  user:'root',
-  password:'wlsrud20',
-  database:'opentutorials'
-});
-// 실제 접속
-db.connect();
+// db 모듈
+var db = require('./lib/db');
 
 // .createServer() 메소드. 공식문서에서 확인할 수 있음. 인자로 함수를 받음.
 // http.server를 리턴함. 그걸 app에 대입한 것. 그리고 server.listen()메소드를 쓰고 3000을 port로 사용.
