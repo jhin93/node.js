@@ -54,34 +54,8 @@ var app = http.createServer(function(request,response){
         })
       } else {
         // mysql 대체
-        // 글 리스트에서 글을 선택할 시 상세 보기.
-        /*
-        // 여기부턴 쿼리스트링에 값이 있는 사이드 페이지들.
-        fs.readdir('./data', function(error, filelist){
-          // 보안을 위해 선언한 'path'에 parse 메소드를 쓰고 그 안에 보호대상을 삽입. 그리고 base까지만 읽도록 .base를 추가하면 그보다 상위 디렉토리는 읽을 수 없음. password.js 참고.
-          var filteredId = path.parse(queryData.id).base;
-          // 파일 읽어오기. data 폴더의 파일을 fs.readFile로 읽어옴. 쿼리스트링에 따라 파일명이 생성됨. utf8로 인코딩.
-          fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
-            var title = queryData.id
-            // 가져온 filelist 배열을 인자로 사용. 파일리스트 가져오기.
-            var list = template.list(filelist);
-            // 삭제 버튼은 링크(a)가 아닌 폼으로 작성. 삭제 버튼 클릭시 path가 delete_process으로 변경.
-            var html = template.html(title, list, 
-              `<h2>${title}</h2><p>${description}</p>`,
-              ` 
-                <a href="/create">create</a> 
-                <a href="/update?id=${title}">update</a>
-                <form action="delete_process" method="post">
-                  <input type="hidden" name="id" value="${title}">
-                  <input type="submit" value="delete">
-                </form>
-              `);
-            response.writeHead(200);
-            response.end(html);
-          });
-        });
-        */
-        //  글 목록 먼저 가져오기
+        // 글 리스트에서 글을 선택할 시 상세 보기
+          // 글 목록 먼저 가져오기
         db.query(`SELECT * FROM topic`, function(error, topics){
           // 에러발생 처리 (ex 데이터를 못받아왔을 때)
           if(error){
@@ -123,14 +97,18 @@ var app = http.createServer(function(request,response){
       // 글 작성(create) 로직.
 
     } else if(pathname === '/create'){
-      fs.readdir('./data', function(error, filelist){
-        // 파일리스트 가져오고 렌더링파트(var template) 삽입.
-        var title = 'WEB - create';
-        // 가져온 filelist 배열을 인자로 사용. 파일리스트 가져오기.
-        var list = template.list(filelist);
-        var html = template.html(title, list, `
-          <!-- 아래 주소의 서버로 인풋값들을 전송함. 그러기 위해 name 속성이 필요. -->
-          <form action="/create_process" method="post">
+      // mysql.js의 로직을 여기에 적용.
+      // 두번째 인자에는 첫번째 인자인 sql문이 실행된 서버가 응답된 결과를 처리할 수 있도록 콜백함수를 줌.
+      // 콜백함수의 대표형식은 첫번째 인자로 실패했을 때의 error, 두번째 인자로 성공했을 떄의 topics 
+      db.query(`SELECT * FROM topic`, function(error, topics){
+        var title = 'Create';
+        // 가져온 filelist 배열을 인자로 사용. template.js 모듈에서 list 함수 가져와서 데이터(topics)대입.
+        var list = template.list(topics);
+        // template.html에 각 인자들이 ,로 구분되어 대입되고, 그 결과물을 변수(html)에 담음. control엔 ui 요소담음(ex a 태그)
+        var html = template.html(title, list, 
+          // create를 눌렀을 때 글 목록 가져오기.
+          `
+            <form action="/create_process" method="post">
               <p><input type="text" name="title" placeholder="title"></p>
               <p>
                   <!-- 여러줄 입력하는 태그 - textarea -->
@@ -139,11 +117,15 @@ var app = http.createServer(function(request,response){
               <p>
                   <input type="submit">
               </p>
-          </form>
-        `, '');
+            </form>
+          `,
+          // 홈페이지에서 쿼리스트링이 있는 경우에만, 즉 사이드페이지에서만 update가 될 수 있도록 pathname === '/' 조건에서는 `<a href="/update">update</a>`는 뺀다.
+          `<a href="/create">create</a>`
+        );
+        // 웹페이지 마무리 대표형식
         response.writeHead(200);
         response.end(html);
-      });
+      })
 
       // 글 작성(create) 제출 로직.
 
@@ -157,20 +139,17 @@ var app = http.createServer(function(request,response){
       request.on('end',function(){
         // querystring(최상단 변수 확인)으로 받아온 데이터를 parse해서 빈 body에 대입.
         var post = qs.parse(body);
-        // 데이터 중 title
-        var title = post.title;
-        // 데이터 중 description
-        var description = post.description;
-
         //    받아온 데이터로 파일생성하기.
-        
-        // fs.writeFile('message.txt', 'Hello Node.js', 'utf8', callback);
-        // fs.writeFile(data 디렉토리/파일 이름으로 사용할 title, 파일내용으로 사용할 description, 'utf8', 콜백함수)
-        fs.writeFile(`data/${title}`, description, 'utf8', function(err){
-          // "writeHead"는 response 객체의 메소드에서 헤더 정보를 응답에 작성해서 내보내는 것이다. 첫번째 인자는 상태 코드를 지정하고 두번째인수에 헤더 정보를 연관 배열로 정리한 것이다.
-          // 302는 다른 곳으로 리다이렉션 시킨다. 두번째 인자는 리다이렉션 시킬 위치.
-          response.writeHead(302, {Location: `/?id=${title}`});
-          response.end('');            
+
+        // mysql 대체.
+        // 글 작성 sql문 작성. INSERT INTO topic (title, description, created, author_id) VALUES ('제목', '본문', NOW(), author 관련부분은 일단 1);
+        db.query(`INSERT INTO topic (title, description, created, author_id) VALUES (?, ?, NOW(), ?);`, [post.title, post.description, 1], function(error, result){
+          if(error){
+            throw error;
+          }
+          //  sql문이 제대로 작성되면 리다이렉션 주소로 이동. 리다이렉션 주소의 쿼리스트링은 result(콜백함수에서 인자로 받은 sql문 결과).insertId로 알아낸 해당 row의 id대입.
+          response.writeHead(302, {Location: `/?id=${result.insertId}`});
+          response.end('');  
         })
       })
 
