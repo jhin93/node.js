@@ -10,6 +10,9 @@ var db = require('./lib/db');
 // topic 테이블 모듈
 var topic = require('./lib/topic');
 
+const host = "127.0.0.1"
+const port = 3000
+
 // .createServer() 메소드. 공식문서에서 확인할 수 있음. 인자로 함수를 받음.
 // http.server를 리턴함. 그걸 app에 대입한 것. 그리고 server.listen()메소드를 쓰고 3000을 port로 사용.
 // server.listen([port][, host][, backlog][, callback]). 대괄호는 생략가능한 인자.
@@ -53,7 +56,10 @@ var app = http.createServer(function(request,response){
       response.end('Not found');
     }
 });
-app.listen(3000);
+
+app.listen(port, host, () => {
+  console.log(`Application running at http://${host}:${port}/`)
+});
 
 // node main.js 뭐뭐. 이렇게 터미널에서 실행 시 
 // 1) 노드의 런타임이 돌아가는 위치 
