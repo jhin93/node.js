@@ -1,7 +1,5 @@
 var http = require('http');
-// url이라는 모듈을 사용할 것이라고 node.js에게 선언.
 var url = require('url');
-// querystring이라는 nodejs의 모듈.
 var qs = require('querystring');
 // 템플릿 모듈
 var template = require('./lib/template.js');
